@@ -1,4 +1,4 @@
-import UIKit
+import Foundation
 
 enum Genre {
     case fiction
@@ -60,48 +60,36 @@ class User {
             case .price:
                 return ascending ? $0.price < $1.price : $0.price > $1.price
             }
-        }.map { book in
-            "\(book.title) (\(book.author)) - \(book.price)\u{20BD}"
+        }.map {
+            "\($0.title) (\($0.author)) - \($0.price)\u{20BD}"
         }.joined(separator: "\n")
     }
-    
-    /* array of books
-    func sortedListOfBooks(by parameter: Parameter, ascending: Bool = true) -> [Book] {
-        return cart.sorted {
-            switch parameter {
-            case .title:
-                return ascending ? $0.title < $1.title : $0.title > $1.title
-            case .price:
-                return ascending ? $0.price < $1.price : $0.price > $1.price
-            }
-        }
-    }*/
 }
 
 let library = Library()
 library.addBook(
-Book(
-    title: "Гарри Поттер и философский камень",
-    author: "Дж.К. Роулинг",
-    price: 1000,
-    genre: .fiction
-)
-)
-library.addBook(
-Book(
-    title: "Война и мир",
-    author: "Лев Толстой",
-    price: 850,
-    genre: .novel
-)
+    Book(
+        title: "Гарри Поттер и философский камень",
+        author: "Дж.К. Роулинг",
+        price: 1000,
+        genre: .fiction
+    )
 )
 library.addBook(
-Book(
-    title: "Стихотворение",
-    author: "Владимир Маяковский",
-    price: 540,
-    genre: .poems
+    Book(
+        title: "Война и мир",
+        author: "Лев Толстой",
+        price: 850,
+        genre: .novel
+    )
 )
+library.addBook(
+    Book(
+        title: "Стихотворение",
+        author: "Владимир Маяковский",
+        price: 540,
+        genre: .poems
+    )
 )
 
 let user = User(name: "Алиса", discount: 1.5)
