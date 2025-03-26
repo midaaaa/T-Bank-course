@@ -187,7 +187,7 @@ class PotionHP: Item {
     var name: String
     var description: String
     var amount: Int
-    var owner: GameCharacter
+    unowned var owner: GameCharacter
     
     init(name: String, description: String, amount: Int, owner: GameCharacter) {
         self.name = name
@@ -206,7 +206,7 @@ class Dagger: Item {
     var name: String
     var description: String
     var amount: Int
-    var owner: GameCharacter
+    unowned var owner: GameCharacter
     
     init(name: String, description: String, amount: Int, owner: GameCharacter) {
         self.name = name
