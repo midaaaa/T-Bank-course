@@ -8,8 +8,6 @@
 import UIKit
 
 func makeScene() -> UIViewController {
-    //networkClient = NetworkClient()
-    //let presenter = MainPresenter(networkClient: networkClient)
     let presenter = Presenter()
     let view = ViewController (presenter: presenter)
     presenter.view = view

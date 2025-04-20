@@ -89,8 +89,6 @@ class Presenter {
 
 class ImageDownloader: NSObject {
     private var receivedData: [URL: Data] = [:]
-    
-    
     private var activeDownloads: [URL: (index: Int, completion: (UIImage?) -> Void)] = [:]
     private lazy var downloadsSession: URLSession = {
         let configuration = URLSessionConfiguration.default
