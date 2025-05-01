@@ -1,6 +1,0 @@
-framework module Pods_Image_Dispatcher {
-  umbrella header "Pods-Image Dispatcher-umbrella.h"
-
-  export *
-  module * { export * }
-}
