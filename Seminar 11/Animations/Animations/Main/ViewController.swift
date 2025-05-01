@@ -42,8 +42,8 @@ class ViewController: UIViewController {
         button.titleLabel?.font = .systemFont(ofSize: 20, weight: .regular)
         button.backgroundColor = .white
         button.layer.cornerRadius = 8
-        button.layer.masksToBounds = true
         button.alpha = 0
+        button.isUserInteractionEnabled = false
         button.addTarget(self, action: #selector(didTapButton), for: .touchUpInside)
         button.addTarget(self, action: #selector(didTouchButtonOutside), for: .touchDown)
         button.addTarget(self, action: #selector(didTouchButtonInside), for: .touchUpOutside)
@@ -85,7 +85,7 @@ class ViewController: UIViewController {
             headlineLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor, constant: 20),
             headlineLabel.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
             
-            actionButton.topAnchor.constraint(equalTo: headlineLabel.bottomAnchor, constant: 20),
+            actionButton.topAnchor.constraint(equalTo: headlineLabel.bottomAnchor, constant: 40),
             actionButton.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
             actionButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 30),
             actionButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -30),
@@ -94,22 +94,29 @@ class ViewController: UIViewController {
     }
     
     private func resetUI() {
-        // перезапуск элементов с задержкой 500мс
-        UIView.animate(withDuration: 0.5) {
-            self.logoImage.alpha = 0
-            self.headlineLabel.alpha = 0
-            self.actionButton.alpha = 0
-            self.logoImage.center.y -= 300
-            self.logoImage.transform = .identity
-            self.actionButton.transform = CGAffineTransform(scaleX: 0.1, y: 0.1).rotated(by: .pi)
-            self.actionButton.layer.cornerRadius = 8
-        }
+        // перезапуск элементов с задержкой 500мс (все анимации проигрываются одновременно назад)
+        UIView.animate(
+            withDuration: 0.5,
+            animations: {
+                self.logoImage.alpha = 0
+                self.headlineLabel.alpha = 0
+                self.actionButton.alpha = 0
+                self.logoImage.center.y -= 300
+                self.logoImage.transform = .identity
+                self.actionButton.transform = CGAffineTransform(scaleX: 0.1, y: 0.1).rotated(by: .pi)
+                self.actionButton.layer.cornerRadius = 8
+                self.actionButton.isUserInteractionEnabled = false
+                self.actionButton.layer.shadowOpacity = 0
+            },
+            completion: { _ in
+                self.animate()
+            }
+        )
     }
     
     private func animate() {
         // Логотип опускается вниз
         UIView.animate(withDuration: 1, delay: 1) {
-            //self.view.layoutIfNeeded()
             self.logoImage.alpha = 1
             self.logoImage.center.y += 300
         }
@@ -123,30 +130,45 @@ class ViewController: UIViewController {
         UIView.animate(
             withDuration: 1,
             delay: 3.4,
-            usingSpringWithDamping: 0.6,
+            usingSpringWithDamping: 0.8,
             initialSpringVelocity: 1,
             animations: {
                 self.actionButton.alpha = 1
                 self.actionButton.transform = .identity
+                
+            },
+            completion: { _ in
+                self.actionButton.isUserInteractionEnabled = true
+                self.drawButtonShadow()
             }
         )
-        /*
-        UIView.animate(
-            withDuration: 1,
-            delay: 3.4,
-            usingSpringWithDamping: 0.6,
-            initialSpringVelocity: 1
-        ) {
-            self.actionButton.alpha = 1
-            self.actionButton.transform = .identity
-        }*/
+    }
+    
+    private func drawButtonShadow() {
+        let path = UIBezierPath(
+            roundedRect: actionButton.bounds,
+            cornerRadius: actionButton.layer.cornerRadius
+        )
+        actionButton.layer.shadowPath = path.cgPath
+        actionButton.layer.shadowColor = UIColor.white.cgColor
+        actionButton.layer.shadowOpacity = 0.6
+        actionButton.layer.shadowRadius = 20
+        actionButton.layer.shadowOffset = CGSize(width: 0, height: 0)
+        
+        // анимация появления тени после завершения анимации появления и поворота
+        let shadowAnimation = CABasicAnimation(keyPath: "shadowOpacity")
+        shadowAnimation.fromValue = 0
+        shadowAnimation.toValue = 0.5
+        shadowAnimation.duration = 0.5
+        actionButton.layer.add(shadowAnimation, forKey: "buttonShadow")
     }
     
     @objc private func didTouchButtonInside() {
+        // анимация отпускания кнопки
         UIView.animate(
             withDuration: 0.4,
             delay: 0,
-            usingSpringWithDamping: 0.4,
+            usingSpringWithDamping: 0.5,
             initialSpringVelocity: 0
         ) {
             self.actionButton.layer.cornerRadius = 8
@@ -155,6 +177,7 @@ class ViewController: UIViewController {
     }
     
     @objc private func didTouchButtonOutside() {
+        // анимация нажатия(удерживания) кнопки
         UIView.animate(withDuration: 0.2) {
             self.actionButton.layer.cornerRadius = 20
             self.actionButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
@@ -163,6 +186,6 @@ class ViewController: UIViewController {
     
     @objc private func didTapButton() {
         resetUI()
-        animate()
+        //animate()
     }
 }

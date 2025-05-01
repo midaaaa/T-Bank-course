@@ -15,6 +15,6 @@ class Presenter {
     weak var view: PresenterView?
     
     func viewDidLoad() {
-        
+        //view.animate()
     }
 }
