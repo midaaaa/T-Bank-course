@@ -91,6 +91,9 @@ class ViewController: UIViewController {
         static let animationDelayLong: TimeInterval = 0.4
         static let activeButtonHoldDuration: TimeInterval = 0.2
         static let activeButtonReleaseDuration: TimeInterval = activeButtonHoldDuration * 2
+        
+        static let activeButtonShadowRadius: CGFloat = 20
+        static let activeButtonShadowOpacity: Float = 0.6
     }
     
     private func setupUI() {
@@ -134,15 +137,14 @@ class ViewController: UIViewController {
         )
         actionButton.layer.shadowPath = path.cgPath
         actionButton.layer.shadowColor = UIColor.white.cgColor
-        actionButton.layer.shadowOpacity = 0.6
-        actionButton.layer.shadowRadius = Constants.actionButtonCornerRadiusActive
-        actionButton.layer.shadowOffset = CGSize(width: 0, height: 0)
+        actionButton.layer.shadowOpacity = Constants.activeButtonShadowOpacity
+        actionButton.layer.shadowRadius = Constants.activeButtonShadowRadius
         
         // анимация появления тени после завершения анимации появления и поворота
         let shadowAnimation = CABasicAnimation(keyPath: "shadowOpacity")
         shadowAnimation.fromValue = 0
-        shadowAnimation.toValue = 0.5
-        shadowAnimation.duration = 0.5
+        shadowAnimation.toValue = actionButton.layer.shadowOpacity
+        shadowAnimation.duration = Constants.shadowDuration
         actionButton.layer.add(shadowAnimation, forKey: "buttonShadow")
     }
     
