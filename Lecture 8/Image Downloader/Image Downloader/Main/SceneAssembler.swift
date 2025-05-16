@@ -7,9 +7,11 @@
 
 import UIKit
 
-func makeScene() -> UIViewController {
-    let presenter = Presenter()
-    let view = ViewController (presenter: presenter)
-    presenter.view = view
-    return view
+final class SceneAssembler {
+    func makeScene() -> UIViewController {
+        let presenter = Presenter()
+        let view = ViewController (presenter: presenter)
+        presenter.view = view
+        return view
+    }
 }

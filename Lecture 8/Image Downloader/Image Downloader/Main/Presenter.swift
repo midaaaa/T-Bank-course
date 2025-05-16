@@ -14,9 +14,10 @@ protocol PresenterView: AnyObject {
     func updateProgress(_ progress: Float)
 }
 
-class Presenter {
+final class Presenter {
     weak var view: PresenterView?
     private var products: [Product] = []
+    private var productsDTO: [ProductDTO] = []
     private var imageLoader = ImageDownloader()
     private var imagesLoaded = 0
     private var totalImagesToLoad = 0
@@ -36,11 +37,13 @@ class Presenter {
     private func getJSONs() {
         let url = URL(string: "https://fakestoreapi.com/products")!
         
-        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+        let task = URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            guard let self = self else { return }
+            
             defer {
                 DispatchQueue.main.async {
-                    self.view!.stopAnimation()
-                    self.view!.updateTable()
+                    guard let view = self.view else { return }
+                    view.stopAnimation()
                     self.startDownload()
                 }
             }
@@ -48,7 +51,8 @@ class Presenter {
             if let data = data {
                 print("\u{2705} Данные получены: \(data)")
                 do {
-                    self.products = try JSONDecoder().decode([Product].self, from: data)
+                    self.productsDTO = try JSONDecoder().decode([ProductDTO].self, from: data)
+                    self.products = self.productsDTO.map { Product(from: $0) }
                     print("\u{2705} Успешно распарсили \(self.products.count) товаров")
                 } catch {
                     print("\u{274C} Ошибка парсинга: \(error)")
@@ -61,9 +65,10 @@ class Presenter {
     }
     
     private func startDownload() {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, let view = self.view else { return }
             self.totalImagesToLoad = self.products.count
-            self.view!.updateTable()
+            view.updateTable()
 
             self.products.enumerated().forEach { index, product in
                 self.loadImage(for: product, at: index)
@@ -72,8 +77,8 @@ class Presenter {
     }
     
     private func loadImage(for product: Product, at index: Int) {
-        imageLoader.loadImage(url: product.image, forIndex: index) { [weak self] image in
-            guard let self = self, let image = image else { return }
+        imageLoader.loadImage(url: product.imageURL, forIndex: index) { [weak self] image in
+            guard let self = self, let image = image, let view = self.view else { return }
             
             self.imagesLoaded += 1
             let progress = Float(self.imagesLoaded) / Float(self.totalImagesToLoad)
@@ -81,54 +86,8 @@ class Presenter {
             print("Загружено изображение \(index + 1)/\(self.totalImagesToLoad)")
             print("Текущий прогресс: \(Int(progress * 100)) %")
             
-            self.view?.updateProgress(progress)
-            self.view?.updateImage(image, at: index)
-        }
-    }
-}
-
-class ImageDownloader: NSObject {
-    private var receivedData: [URL: Data] = [:]
-    private var activeDownloads: [URL: (index: Int, completion: (UIImage?) -> Void)] = [:]
-    private lazy var downloadsSession: URLSession = {
-        let configuration = URLSessionConfiguration.default
-        return URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
-    }()
-    
-    func loadImage(url: URL, forIndex index: Int, completion: @escaping (UIImage?) -> Void) {
-        activeDownloads[url] = (index, completion)
-        let downloadTask = downloadsSession.dataTask(with: url)
-        downloadTask.resume()
-    }
-}
-
-extension ImageDownloader: URLSessionDataDelegate {
-    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        guard let url = dataTask.originalRequest?.url else { return }
-        
-        if receivedData[url] == nil {
-            receivedData[url] = Data()
-        }
-        receivedData[url]?.append(data)
-    }
-    
-    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        guard let url = task.originalRequest?.url,
-              let (index, completion) = activeDownloads[url] else { return }
-        
-        DispatchQueue.main.async {
-            if let error = error {
-                print("Ошибка загрузки: \(error)")
-                completion(nil)
-            } else if let data = self.receivedData[url], let image = UIImage(data: data) {
-                completion(image)
-            } else {
-                print("Не удалось создать изображение из данных")
-                completion(nil)
-            }
-            
-            self.activeDownloads.removeValue(forKey: url)
-            self.receivedData.removeValue(forKey: url)
+            view.updateProgress(progress)
+            view.updateImage(image, at: index)
         }
     }
 }

@@ -7,20 +7,106 @@
 
 import UIKit
 
-struct Product: Codable {
-    let id: Int
-    let title: String
-    let price: Double
-    let description: String
-    let category: String
-    let image: URL
-    let rating: Rating
+class ViewController: UIViewController {
     
-    struct Rating: Codable {
-        let rate: Double
-        let count: Int
+    private enum Constants {
+        static let rowHeight: CGFloat = 116
+        static let progressBarGap: CGFloat = 15
+        static let tableViewGap: CGFloat = 8
+    }
+    
+    private let presenter: Presenter
+    
+    private lazy var spinner: UIActivityIndicatorView = {
+        let spinner = UIActivityIndicatorView()
+        spinner.style = .large
+        spinner.color = .black
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        return spinner
+    }()
+    
+    private lazy var progressBar: UIProgressView = {
+        let progressBar = UIProgressView()
+        progressBar.translatesAutoresizingMaskIntoConstraints = false
+        progressBar.progressViewStyle = .default
+        progressBar.isHidden = true
+        view.addSubview(progressBar)
+        return progressBar
+    }()
+
+    private lazy var tableView: UITableView = {
+        let tableView = UITableView()
+        tableView.register(ProductViewCell.self, forCellReuseIdentifier: "ProductViewCell")
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.rowHeight = Constants.rowHeight
+        tableView.estimatedRowHeight = Constants.rowHeight
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        return tableView
+    }()
+    
+    private var productImages: [Int: UIImage] = [:]
+    
+    init(presenter: Presenter) {
+        self.presenter = presenter
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        // Do any additional setup after loading the view.
+        
+        setupUI()
+        startSpinner()
+        presenter.viewDidLoad()
+    }
+    
+    private func setupUI() {
+        view.backgroundColor = .white
+        view.addSubview(progressBar)
+        view.addSubview(tableView)
+        view.addSubview(spinner)
+        
+        NSLayoutConstraint.activate([
+            progressBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            progressBar.leadingAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.leadingAnchor,
+                constant: Constants.progressBarGap
+            ),
+            progressBar.trailingAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.trailingAnchor,
+                constant: -Constants.progressBarGap
+            ),
+            
+            tableView.topAnchor.constraint(equalTo: progressBar.bottomAnchor, constant: Constants.tableViewGap),
+            tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            
+            spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            spinner.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+    }
+    
+    private func startSpinner() {
+        spinner.startAnimating()
+    }
+    
+    private func stopSpinner() {
+        spinner.stopAnimating()
+    }
+    
+    private func showProgressBar() {
+        progressBar.isHidden = false
     }
 }
+
+// MARK: ViewController + PresenterView
 
 extension ViewController: PresenterView {
     func updateTable() {
@@ -46,81 +132,7 @@ extension ViewController: PresenterView {
     }
 }
 
-class ViewController: UIViewController {
-    private let presenter: Presenter
-    private var spinner = UIActivityIndicatorView()
-    private var progressBar = UIProgressView()
-    private var tableView = UITableView()
-    private var TableViewCell = UITableViewCell()
-    private var productImages: [Int: UIImage] = [:]
-    
-    init(presenter: Presenter) {
-        self.presenter = presenter
-        super.init(nibName: nil, bundle: nil)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        // Do any additional setup after loading the view.
-        
-        setupUI()
-        startSpinner()
-        presenter.viewDidLoad()
-    }
-    
-    private func setupUI() {
-        view.backgroundColor = .white
-        
-        progressBar.translatesAutoresizingMaskIntoConstraints = false
-        progressBar.progress = 0
-        progressBar.isHidden = true
-        view.addSubview(progressBar)
-        
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.register(ProductViewCell.self, forCellReuseIdentifier: "ProductViewCell")
-        tableView.dataSource = self
-        tableView.delegate = self
-        tableView.estimatedRowHeight = 116
-        tableView.rowHeight = 116
-        view.addSubview(tableView)
-        
-        spinner.style = .large
-        spinner.color = .black
-        spinner.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(spinner)
-        
-        NSLayoutConstraint.activate([
-            progressBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            progressBar.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 15),
-            progressBar.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -15),
-            
-            tableView.topAnchor.constraint(equalTo: progressBar.bottomAnchor, constant: 8),
-            tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            
-            spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            spinner.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-        ])
-    }
-    
-    private func startSpinner() {
-        spinner.startAnimating()
-    }
-    
-    private func stopSpinner() {
-        spinner.stopAnimating()
-    }
-    
-    private func showProgressBar() {
-        progressBar.isHidden = false
-    }
-}
+// MARK: ViewController + UITableViewDataSource + UITableViewDelegate
 
 extension ViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -130,7 +142,7 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ProductViewCell", for: indexPath) as! ProductViewCell
         let product = presenter.product(at: indexPath.row)
-        cell.setValues(title: product.title,
+        cell.setValues(title: product.name,
                        description: product.description,
                        price: product.price)
 
