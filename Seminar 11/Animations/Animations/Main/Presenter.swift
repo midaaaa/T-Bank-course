@@ -33,6 +33,7 @@ final class Presenter: PresenterProtocol {
         static let animationDuration: TimeInterval = 1
         static let animationDelay: TimeInterval = 0.2
         static let buttonAnimationDuration: TimeInterval = 0.5
+        static let totalDelay = Constants.animationDuration + Constants.animationDelay
     }
     
     private func startAnimations() {
@@ -42,13 +43,13 @@ final class Presenter: PresenterProtocol {
         view?.animateLogo()
         
         DispatchQueue.main.asyncAfter(
-            deadline: .now() + Constants.animationDuration + Constants.animationDelay
+            deadline: .now() + Constants.totalDelay
         ) { [weak self] in
             self?.view?.animateHeadline()
         }
         
         DispatchQueue.main.asyncAfter(
-            deadline: .now() + Constants.animationDuration + Constants.animationDelay + Constants.animationDuration + Constants.animationDelay
+            deadline: .now() + Constants.totalDelay * 2
         ) { [weak self] in
             self?.view?.animateActionButton()
             self?.view?.setActionButtonEnabled(true)

@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+final class ViewController: UIViewController {
     private let presenter: Presenter
     
     private lazy var logoImage: UIImageView = {
