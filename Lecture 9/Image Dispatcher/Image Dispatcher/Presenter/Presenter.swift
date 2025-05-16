@@ -23,37 +23,37 @@ protocol PresenterProtocol {
 final class Presenter: PresenterProtocol {
     weak var view: PresenterViewProtocol?
     private let imageDownloadService: ImageDownloadProtocol
-    private let imageUrls: [String]
+    private let imageURLs: [String]
     private var isLoading = false
     
-    init(imageDownloadService: ImageDownloadProtocol, imageUrls: [String]) {
+    init(imageDownloadService: ImageDownloadProtocol, imageURLs: [String]) {
         self.imageDownloadService = imageDownloadService
-        self.imageUrls = imageUrls
+        self.imageURLs = imageURLs
     }
     
     func viewDidLoad() {
-        
+        guard let view = view else { return }
+        view.enableButton(true)
     }
     
     private enum Constants {
-        static let animationDuration: TimeInterval = 1
+        static let buttonDelay: TimeInterval = 0.5
         
+        static let errorImageSize: CGFloat = 30
     }
 
     func didTapButton() {
-        guard !isLoading else { return }
-        
+        guard !isLoading, let view = view else { return }
         isLoading = true
-        view?.enableButton(false)
-        view?.updateButtonTitle("")
-        view?.showLoading(true)
-        view?.clearImageViews()
+        view.enableButton(false)
+        view.updateButtonTitle("")
+        view.showLoading(true)
+        view.clearImageViews()
         
-        
-        var downloadedImages: [UIImage?] = Array(repeating: nil, count: imageUrls.count)
+        var downloadedImages: [UIImage?] = Array(repeating: nil, count: imageURLs.count)
         let group = DispatchGroup()
         
-        for (index, url) in imageUrls.enumerated() {
+        for (index, url) in imageURLs.enumerated() {
             group.enter()
             imageDownloadService.downloadImage(from: url) { [weak self] result in
                 switch result {
@@ -67,20 +67,19 @@ final class Presenter: PresenterProtocol {
         }
         
         group.notify(queue: .main) { [weak self] in
-            self?.view?.showLoading(false)
-            self?.view?.updateButtonTitle("Загрузить ещё раз")
-            self?.view?.displayImages(downloadedImages)
-            self?.view?.enableButton(true)
-            self?.isLoading = false
+            guard let self = self, let view = self.view else { return }
+            view.displayImages(downloadedImages)
+            view.showLoading(false)
+            view.updateButtonTitle("Загрузить ещё раз")
+            DispatchQueue.main.asyncAfter(deadline: .now() + Constants.buttonDelay) {
+                view.enableButton(true)
+                self.isLoading = false
+            }
         }
     }
     
-    func getImageUrls() -> [String] {
-        return imageUrls
-    }
-    
     private func errorImage() -> UIImage? {
-        let config = UIImage.SymbolConfiguration(pointSize: 30, weight: .medium, scale: .large)
+        let config = UIImage.SymbolConfiguration(pointSize: Constants.errorImageSize, weight: .medium, scale: .large)
         return UIImage(systemName: "photo.badge.exclamationmark", withConfiguration: config)
     }
 }

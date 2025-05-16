@@ -13,10 +13,14 @@ protocol ImageDownloadProtocol {
 }
 
 final class ImageDownloadService: ImageDownloadProtocol {
+    private enum Constants {
+        static let timeoutInterval: TimeInterval = 5
+    }
+    
     private var requests: [DataRequest] = []
     
     func downloadImage(from url: String, completion: @escaping (Result<UIImage, Error>) -> Void) {
-        let request = AF.request(url, requestModifier: { $0.timeoutInterval = 5 })
+        let request = AF.request(url, requestModifier: { $0.timeoutInterval = Constants.timeoutInterval })
             .responseData { response in
                 switch response.result {
                 case .success(let data):
