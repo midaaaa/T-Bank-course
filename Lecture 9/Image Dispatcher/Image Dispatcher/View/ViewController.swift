@@ -40,6 +40,7 @@ final class ViewController: UIViewController {
         button.setTitle("Загрузить", for: .normal)
         button.setTitleColor(.black, for: .normal)
         button.layer.cornerRadius = Constants.buttonCornerRadius
+        button.isUserInteractionEnabled = false
         button.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(button)
         return button
@@ -116,13 +117,14 @@ final class ViewController: UIViewController {
             spinnerIcon.centerXAnchor.constraint(equalTo: downloadButton.centerXAnchor),
             spinnerIcon.centerYAnchor.constraint(equalTo: downloadButton.centerYAnchor)
         ])
-
     }
     
     @objc private func didTapButton() {
         presenter.didTapButton()
     }
 }
+
+// MARK: ViewController + PresenterViewProtocol
 
 extension ViewController: PresenterViewProtocol {
     func displayImages(_ images: [UIImage?]) {
