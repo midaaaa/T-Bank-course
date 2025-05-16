@@ -13,6 +13,7 @@ protocol PresenterViewProtocol: AnyObject {
     func updateButtonTitle(_ title: String)
     func enableButton(_ isEnabled: Bool)
     func clearImageViews()
+    
 }
 
 protocol PresenterProtocol {
@@ -43,39 +44,66 @@ final class Presenter: PresenterProtocol {
     }
 
     func didTapButton() {
-        guard !isLoading, let view = view else { return }
+        guard !isLoading else { return }
+        loadBegun()
+    }
+    
+    private func loadBegun() {
+        guard let view = view else { return }
         isLoading = true
         view.enableButton(false)
         view.updateButtonTitle("")
         view.showLoading(true)
         view.clearImageViews()
-        
+        loadImages()
+    }
+    
+    private func loadImages() {
         var downloadedImages: [UIImage?] = Array(repeating: nil, count: imageURLs.count)
         let group = DispatchGroup()
         
         for (index, url) in imageURLs.enumerated() {
             group.enter()
             imageDownloadService.downloadImage(from: url) { [weak self] result in
+                guard let self = self else { return }
                 switch result {
                 case .success(let image):
                     downloadedImages[index] = image
-                case .failure:
-                    downloadedImages[index] = self?.errorImage()
+                case .failure(let error):
+                    downloadedImages[index] = self.errorImage()
+                    self.handleError(error as! ImageDownloadService.ImageDownloadError)
                 }
                 group.leave()
             }
         }
         
         group.notify(queue: .main) { [weak self] in
-            guard let self = self, let view = self.view else { return }
-            view.displayImages(downloadedImages)
-            view.showLoading(false)
-            view.updateButtonTitle("Загрузить ещё раз")
-            DispatchQueue.main.asyncAfter(deadline: .now() + Constants.buttonDelay) {
-                view.enableButton(true)
-                self.isLoading = false
-            }
+            guard let self = self else { return }
+            self.loadEnded(images: downloadedImages)
         }
+    }
+    
+    private func loadEnded(images: [UIImage?]) {
+        guard let view = self.view else { return }
+        view.displayImages(images)
+        view.showLoading(false)
+        view.updateButtonTitle("Загрузить ещё раз")
+        DispatchQueue.main.asyncAfter(deadline: .now() + Constants.buttonDelay) { [weak self] in
+            guard let self = self else { return }
+            view.enableButton(true)
+            self.isLoading = false
+        }
+    }
+    
+    private func handleError(_ error: ImageDownloadService.ImageDownloadError) {
+        let errorMessage: String
+        switch error {
+        case .invalidURL:
+            errorMessage = "Неверный URL изображения"
+        case .invalidImageData:
+            errorMessage = "Невозможно преобразовать данные в изображение"
+        }
+        print(errorMessage)
     }
     
     private func errorImage() -> UIImage? {

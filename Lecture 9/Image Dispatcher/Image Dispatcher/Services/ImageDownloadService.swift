@@ -29,14 +29,15 @@ final class ImageDownloadService: ImageDownloadProtocol {
                     } else {
                         completion(.failure(ImageDownloadError.invalidImageData))
                     }
-                case .failure(let error):
-                    completion(.failure(error))
+                case .failure:
+                    completion(.failure(ImageDownloadError.invalidURL))
                 }
             }
         requests.append(request)
     }
     
     enum ImageDownloadError: Error {
+        case invalidURL
         case invalidImageData
     }
 }
